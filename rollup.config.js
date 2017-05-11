@@ -3,7 +3,7 @@ import resolve from 'rollup-plugin-node-resolve'
 
 export default {
   entry: 'src/index.js',
-  format: 'umd',
+  format: 'cjs',
   dest: 'dist/build.js',
   plugins: [
     babel(),

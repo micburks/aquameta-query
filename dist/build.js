@@ -1,13 +1,9 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(factory());
-}(this, (function () { 'use strict';
+'use strict';
 
-var Query = function Query(config) {
+function Query(config) {
   this.config = config;
   return this;
-};
+}
 
 /* Set query based on datum request */
 Query.prototype.fromRequest = function (req) {
@@ -173,5 +169,3 @@ Query.prototype.execute = function (connection) {
 };
 
 module.exports = Query;
-
-})));

@@ -1,4 +1,4 @@
-const Query = function( config ) {
+export default function Query( config ) {
   this.config = config
   return this
 }
@@ -186,6 +186,3 @@ Query.prototype.execute = function( connection ) {
   })
 
 }
-
-module.exports = Query
-
