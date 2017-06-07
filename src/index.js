@@ -4,8 +4,7 @@ export default function Query( config ) {
 }
 
 /* Set query based on datum request */
-Query.prototype.fromRequest = function( req ) {
-
+Query.prototype.fromRequest = function (req) {
   this.method = req.method
   this.metaId = req.url.split('?')[0]
   this.args = req.query
@@ -20,8 +19,7 @@ Query.prototype.fromRequest = function( req ) {
 }
 
 /* Set query based on programmatic api */
-Query.prototype.fromDatum = function( method, metaId, args, data ) {
-
+Query.prototype.fromDatum = function (method, metaId, args, data) {
   this.method = method
   this.metaId = metaId.toUrl()
   this.args = args || {}
@@ -32,18 +30,14 @@ Query.prototype.fromDatum = function( method, metaId, args, data ) {
 
   // Map the keys of the args object to an array of encoded url components
   this.queryString = Object.keys(this.args).sort().map(keyName => {
-
     let key = this.args[keyName]
 
-    switch(keyName) {
-
+    switch (keyName) {
       case 'where':
         // where: { name: 'column_name', op: '=', value: 'value' }
         // where: [{ name: 'column_name', op: '=', value: 'value' }]
         key = !key.length ? [key] : key
-
-        return key.map(w => `where=${ encodeURIComponent( JSON.stringify(w) ) }` ).join('&')
-
+        return key.map(w => `where=${encodeURIComponent(JSON.stringify(w))}`).join('&')
       case 'order_by':
         // So many possibilities...
         // order_by: '-?column_name'
@@ -54,44 +48,39 @@ Query.prototype.fromDatum = function( method, metaId, args, data ) {
         // order_by: [{ column: 'column_name', direction: 'asc|desc' }]
         key = !key.length ? [key] : key
 
-        return `${ keyName }=${
+        return `${keyName}=${
                     encodeURIComponent(
-                      key.map((o,i) => (o.direction !== 'asc' ? '-' : '') + o.column)
+                      key.map((o, i) => (o.direction !== 'asc' ? '-' : '') + o.column)
                       .join(',')
                     )
                 }`
-
       case 'limit':
         // limit: number
-      case 'offset':
+      case 'offset': // eslint-disable-line no-fallthrough
         // offset: number
         let parsedNum = parseInt(key)
         if (!isNaN(parsedNum)) {
           return `${keyName}=${parsedNum}`
         }
         return
-
       case 'evented':
         return 'session_id=' + encodeURIComponent(JSON.stringify(key))
-
       case 'metaData':
       case 'args':
       case 'exclude':
       case 'include':
-        return `${keyName}=${ encodeURIComponent( JSON.stringify(key) ) }`
+        return `${keyName}=${encodeURIComponent(JSON.stringify(key))}`
     }
   })
     .join('&')
-  //.replace(/^/, '?')
+    // .replace(/^/, '?')
     .replace(/&&/g, '&')
 
   console.log('fromDatum queryString', this.queryString)
-
-};
+}
 
 /* Client-side */
-Query.prototype.fetch = function() {
-
+Query.prototype.fetch = function () {
   let baseUrl = `/${this.config.url}/${this.config.version}`.replace(/\/+/g, '/')
   console.log('base url for fetch', baseUrl)
 
@@ -100,7 +89,7 @@ Query.prototype.fetch = function() {
   let urlWithQuery = urlWithoutQuery + this.queryString.replace(/^\?*/, '?')
 
   // If query string is too long, upgrade GET method to POST
-  if(this.method === 'GET' && (location.host + urlWithQuery).length > 1000) {
+  if (this.method === 'GET' && (location.host + urlWithQuery).length > 1000) {
     this.method = 'POST'
   }
 
@@ -122,7 +111,6 @@ Query.prototype.fetch = function() {
 
   return fetch(this.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
     .then(response => {
-
       // Read json stream
       var json = response.json()
 
@@ -132,27 +120,21 @@ Query.prototype.fetch = function() {
 
       // If bad request (code 300 or higher), reject promise
       return json.then(Promise.reject.bind(Promise))
-
     })
     .catch(error => {
-
       // Log error in collapsed group
-      console.groupCollapsed(method, error.statusCode, error.title)
+      console.groupCollapsed(this.method, error.statusCode, error.title)
       if ('message' in error) {
         console.error(error.message)
       }
       console.groupEnd()
       throw error.title
-
-    });
-
-};
+    })
+}
 
 /* Server-side */
-Query.prototype.execute = function( connection ) {
-
+Query.prototype.execute = function (connection) {
   return connection.then(client => {
-
     console.log('trying connection', this.config.version, this.method, this.metaId, JSON.stringify(this.args), JSON.stringify(this.data))
 
     return client.query(
@@ -164,25 +146,18 @@ Query.prototype.execute = function( connection ) {
         JSON.stringify(this.args),
         JSON.stringify(this.data)
       ])
-
       .then(result => {
-
         // release client
-        //client.release()
+        // client.release()
 
-        result = result.rows[0];
+        result = result.rows[0]
         if (result.status >= 400) throw result
 
         return result
       })
-
       .catch(err => {
-
         if (client.release) client.release()
         console.log('error in endpoint.request query', err)
-
       })
-
   })
-
 }
