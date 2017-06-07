@@ -1,4 +1,7 @@
-export default function Query( config ) {
+/* global location fetch Headers */
+import 'whatwg-fetch'
+
+export default function Query (config) {
   this.config = config
   return this
 }
