@@ -25,6 +25,7 @@
     "rollup-plugin-node-resolve": "^3.0.0"
   },
   "dependencies": {
-    "whatwg-fetch": "^2.0.3"
+    "es6-promise": "^4.1.0",
+    "isomorphic-fetch": "^2.2.1"
   }
 }

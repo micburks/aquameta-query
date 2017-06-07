@@ -1,5 +1,6 @@
 /* global location fetch Headers */
-import 'whatwg-fetch'
+import 'es6-promise/auto'
+import 'isomorphic-fetch'
 
 export default function Query (config) {
   this.config = config
