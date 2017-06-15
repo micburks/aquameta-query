@@ -84,7 +84,7 @@ Query.prototype.fromDatum = function (method, metaId, args, data) {
 }
 
 /* Client-side */
-Query.prototype.fetch = function () {
+Query.prototype.fetch = async function () {
   let baseUrl = `/${this.config.url}/${this.config.version}`.replace(/\/+/g, '/')
   console.log('base url for fetch', baseUrl)
 
@@ -113,35 +113,38 @@ Query.prototype.fetch = function () {
     initObject.body = JSON.stringify(this.data)
   }
 
-  return fetch(this.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
-    .then(response => {
-      // Read json stream
-      var json = response.json()
+  let json
+  try {
+    const response = await fetch(this.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
 
-      if (response.status >= 200 && response.status < 300) {
-        return json
-      }
+    // Read json stream
+    json = response.json()
 
+    if (response.status < 200 || response.state >= 300) {
       // If bad request (code 300 or higher), reject promise
-      return json.then(Promise.reject.bind(Promise))
-    })
-    .catch(error => {
-      // Log error in collapsed group
-      console.groupCollapsed(this.method, error.statusCode, error.title)
-      if ('message' in error) {
-        console.error(error.message)
-      }
-      console.groupEnd()
-      throw error.title
-    })
+      throw new Error(response)
+    }
+  } catch (error) {
+    // Log error in collapsed group
+    console.groupCollapsed(this.method, error.statusCode, error.title)
+    if ('message' in error) {
+      console.error(error.message)
+    }
+    console.groupEnd()
+    throw error.title
+  }
+
+  return json
 }
 
 /* Server-side */
-Query.prototype.execute = function (connection) {
-  return connection.then(client => {
+Query.prototype.execute = async function (connection) {
+  let result
+  let client
+  try {
+    client = await connection
     console.log('trying connection', this.config.version, this.method, this.metaId, JSON.stringify(this.args), JSON.stringify(this.data))
-
-    return client.query(
+    result = await client.query(
       'select status, message, response, mimetype ' +
       'from endpoint.request($1, $2, $3, $4::json, $5::json)', [
         this.config.version,
@@ -150,18 +153,16 @@ Query.prototype.execute = function (connection) {
         JSON.stringify(this.args),
         JSON.stringify(this.data)
       ])
-      .then(result => {
-        // release client
-        // client.release()
 
-        result = result.rows[0]
-        if (result.status >= 400) throw result
+    // release client
+    // client.release()
 
-        return result
-      })
-      .catch(err => {
-        if (client.release) client.release()
-        console.log('error in endpoint.request query', err)
-      })
-  })
+    result = result.rows[0]
+    if (result.status >= 400) throw result
+  } catch (err) {
+    if (client.release) client.release()
+    console.error('error in endpoint.request query', err)
+  }
+
+  return result
 }

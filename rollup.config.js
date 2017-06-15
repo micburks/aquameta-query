@@ -13,13 +13,13 @@ export default {
     'location'
   ],
   plugins: [
-    uglify(),
     eslint(),
-    babel(),
     resolve({
       jsnext: true,
       main: true,
       extensions: [ '.js' ]
-    })
+    }),
+    babel(),
+    uglify()
   ]
 }
