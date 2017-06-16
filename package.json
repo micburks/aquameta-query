@@ -1,9 +1,9 @@
 {
   "name": "aquameta-query",
   "version": "0.0.1",
-  "description": "Run XHR or PG query from request URI or datum",
+  "description": "Central query for communication between client and Aquameta server",
   "main": "dist/build.js",
-  "module": "dist/build.es.js"
+  "module": "dist/build.es.js",
   "scripts": {
     "build": "rollup -c"
   },
