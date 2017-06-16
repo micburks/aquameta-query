@@ -1,12 +1,15 @@
 import babel from 'rollup-plugin-babel'
 import resolve from 'rollup-plugin-node-resolve'
 import eslint from 'rollup-plugin-eslint'
-import uglify from 'rollup-plugin-uglify'
+const pkg = require('./package.json')
 
 export default {
   entry: 'src/index.js',
   format: 'cjs',
-  dest: 'dist/build.js',
+  targets: [
+    { dest: pkg.main, format: 'cjs' },
+    { dest: pkg.module, format: 'es' }
+  ],
   external: [
     'fetch',
     'Headers',
@@ -19,7 +22,6 @@ export default {
       main: true,
       extensions: [ '.js' ]
     }),
-    babel(),
-    uglify()
+    babel()
   ]
 }
