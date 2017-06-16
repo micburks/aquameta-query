@@ -12,7 +12,11 @@
     "aquameta",
     "postgres"
   ],
-  "homepage": "https://aquameta.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micburks/aquameta-query.git
+  },
+  "homepage": "https://github.com/micburks/aquameta-query",
   "author": "Mickey Burks",
   "license": "ISC",
   "devDependencies": {
