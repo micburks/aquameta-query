@@ -1,16 +1,19 @@
 {
   "name": "aquameta-query",
   "version": "0.0.1",
-  "description": "",
+  "description": "Run XHR or PG query from request URI or datum",
   "main": "dist/build.js",
-  "module": "dist/build.es.js",
-  "jsnext:main": "dist/build.es.js",
+  "module": "dist/build.es.js"
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c"
   },
-  "author": "",
+  "keywords": [
+    "datum",
+    "aquameta",
+    "postgres"
+  ],
+  "homepage": "https://aquameta.org",
+  "author": "Mickey Burks",
   "license": "ISC",
   "devDependencies": {
     "babel-helpers": "^6.24.1",
@@ -31,5 +34,9 @@
   "dependencies": {
     "es6-promise": "^4.1.0",
     "isomorphic-fetch": "^2.2.1"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }
