@@ -1,6 +1,6 @@
 /* global location fetch Headers */
-import 'es6-promise/auto'
 import 'isomorphic-fetch'
+require('es6-promise').polyfill()
 
 export default function Query (config) {
   this.config = config

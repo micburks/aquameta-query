@@ -1,5 +1,4 @@
 import babel from 'rollup-plugin-babel'
-import resolve from 'rollup-plugin-node-resolve'
 import eslint from 'rollup-plugin-eslint'
 const pkg = require('./package.json')
 
@@ -13,15 +12,12 @@ export default {
   external: [
     'fetch',
     'Headers',
-    'location'
+    'location',
+    'es6-promise',
+    'isomorphic-fetch'
   ],
   plugins: [
     eslint(),
-    resolve({
-      jsnext: true,
-      main: true,
-      extensions: [ '.js' ]
-    }),
     babel()
   ]
 }
