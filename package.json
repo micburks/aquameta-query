@@ -1,11 +1,13 @@
 {
   "name": "aquameta-query",
   "version": "0.0.2",
-  "description": "Central query for communication between client and Aquameta server",
-  "main": "dist/build.js",
-  "module": "dist/build.es.js",
+  "description": "Query abstraction for communication between Aquameta client & server",
+  "main": "dist/query.js",
+  "module": "dist/query.es.js",
+  "jsnext:main": "dist/query.es.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "watch": "rollup -c -w"
   },
   "keywords": [
     "datum",
@@ -18,7 +20,7 @@
   },
   "homepage": "https://github.com/micburks/aquameta-query",
   "author": "Mickey Burks",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "babel-helpers": "^6.24.1",
     "babel-plugin-external-helpers": "^6.22.0",
@@ -41,7 +43,6 @@
     "isomorphic-fetch": "^2.2.1"
   },
   "files": [
-    "dist",
-    "README.md"
+    "dist"
   ]
 }
