@@ -1,5 +1,4 @@
 /* global location fetch Headers */
-import 'babel-polyfill'
 import 'isomorphic-fetch'
 
 /* Set query based on datum request */
@@ -75,7 +74,7 @@ export function fromDatum (method, metaId, args, data) {
     }
   })
     .join('&')
-    // .replace(/^/, '?')
+  // .replace(/^/, '?')
     .replace(/&&/g, '&')
 
   console.log('fromDatum queryString', query.queryString)
@@ -83,7 +82,7 @@ export function fromDatum (method, metaId, args, data) {
 }
 
 /* Client-side */
-export async function toFetch (query) {
+export function toFetch (query) {
   let baseUrl = `/${query.config.url}/${query.config.version}`.replace(/\/+/g, '/')
   console.log('base url for fetch', baseUrl)
 
@@ -112,38 +111,31 @@ export async function toFetch (query) {
     initObject.body = JSON.stringify(query.data)
   }
 
-  let json
-  try {
-    const response = await fetch(query.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
-
-    // Read json stream
-    json = response.json()
-
-    if (response.status < 200 || response.state >= 300) {
-      // If bad request (code 300 or higher), reject promise
-      throw new Error(response)
-    }
-  } catch (error) {
-    // Log error in collapsed group
-    console.groupCollapsed(query.method, error.statusCode, error.title)
-    if ('message' in error) {
-      console.error(error.message)
-    }
-    console.groupEnd()
-    throw error.title
-  }
-
-  return json
+  return fetch(query.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
+    .then(response => {
+      if (response.status < 200 || response.state >= 300) {
+        // If bad request (code 300 or higher), reject promise
+        throw new Error(response)
+      }
+      // Read json stream
+      return response.json()
+    })
+    .catch(error => {
+      // Log error in collapsed group
+      console.groupCollapsed(query.method, error.statusCode, error.title)
+      if ('message' in error) {
+        console.error(error.message)
+      }
+      console.groupEnd()
+      throw error.title
+    })
 }
 
 /* Server-side */
-export async function toExecute (query, connection) {
-  let result
-  let client
-  try {
-    client = await connection
+export function toExecute (query, connection) {
+  connection.then(client => {
     console.log('trying connection', query.config.version, query.method, query.metaId, JSON.stringify(query.args), JSON.stringify(query.data))
-    result = await client.query(
+    return client.query(
       'select status, message, response, mimetype ' +
       'from endpoint.request($1, $2, $3, $4::json, $5::json)', [
         query.config.version,
@@ -152,16 +144,16 @@ export async function toExecute (query, connection) {
         JSON.stringify(query.args),
         JSON.stringify(query.data)
       ])
+      .then(result => {
+        // release client
+        // client.release()
 
-    // release client
-    // client.release()
-
-    result = result.rows[0]
-    if (result.status >= 400) throw result
-  } catch (err) {
-    if (client.release) client.release()
-    console.error('error in endpoint.request query', err)
-  }
-
-  return result
+        result = result.rows[0]
+        if (result.status >= 400) throw result
+        return result
+      }).catch(err => {
+        if (client.release) client.release()
+        console.error('error in endpoint.request query', err)
+      })
+  })
 }

@@ -7,9 +7,9 @@
   "jsnext:main": "dist/query.es.js",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup -c -w",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test": "nyc mocha",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "watch": "rollup -c -w"
   },
   "keywords": [
     "datum",
