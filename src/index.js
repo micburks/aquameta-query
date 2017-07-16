@@ -1,40 +1,38 @@
 /* global location fetch Headers */
-import 'isomorphic-fetch'
 import 'babel-polyfill'
-
-export default function Query (config) {
-  this.config = config
-  return this
-}
+import 'isomorphic-fetch'
 
 /* Set query based on datum request */
-Query.prototype.fromRequest = function (req) {
-  this.method = req.method
-  this.metaId = req.url.split('?')[0]
-  this.args = req.query
-  this.data = req.body
+export function fromRequest (req) {
+  const query = {}
+  query.method = req.method
+  query.metaId = req.url.split('?')[0]
+  query.args = req.query
+  query.data = req.body
 
-  // Do not need this.queryString
+  // Do not need query.queryString
 
   // metaData defaults to true
-  this.args.metaData = this.args.hasOwnProperty('metaData') ? this.args.metaData : true
+  query.args.metaData = query.args.hasOwnProperty('metaData') ? query.args.metaData : true
 
-  console.log('fromRequest args', this.args)
+  console.log('fromRequest args', query.args)
+  return query
 }
 
 /* Set query based on programmatic api */
-Query.prototype.fromDatum = function (method, metaId, args, data) {
-  this.method = method
-  this.metaId = metaId.toUrl()
-  this.args = args || {}
-  this.data = data || {}
+export function fromDatum (method, metaId, args, data) {
+  const query = {}
+  query.method = method
+  query.metaId = metaId.toUrl()
+  query.args = args || {}
+  query.data = data || {}
 
   // metaData defaults to true
-  this.args.metaData = this.args.hasOwnProperty('metaData') ? this.args.metaData : true
+  query.args.metaData = query.args.hasOwnProperty('metaData') ? query.args.metaData : true
 
   // Map the keys of the args object to an array of encoded url components
-  this.queryString = Object.keys(this.args).sort().map(keyName => {
-    let key = this.args[keyName]
+  query.queryString = Object.keys(query.args).sort().map(keyName => {
+    let key = query.args[keyName]
 
     switch (keyName) {
       case 'where':
@@ -80,21 +78,22 @@ Query.prototype.fromDatum = function (method, metaId, args, data) {
     // .replace(/^/, '?')
     .replace(/&&/g, '&')
 
-  console.log('fromDatum queryString', this.queryString)
+  console.log('fromDatum queryString', query.queryString)
+  return query
 }
 
 /* Client-side */
-Query.prototype.fetch = async function () {
-  let baseUrl = `/${this.config.url}/${this.config.version}`.replace(/\/+/g, '/')
+export async function toFetch (query) {
+  let baseUrl = `/${query.config.url}/${query.config.version}`.replace(/\/+/g, '/')
   console.log('base url for fetch', baseUrl)
 
   // URLs
-  let urlWithoutQuery = baseUrl + this.metaId
-  let urlWithQuery = urlWithoutQuery + this.queryString.replace(/^\?*/, '?')
+  let urlWithoutQuery = baseUrl + query.metaId
+  let urlWithQuery = urlWithoutQuery + query.queryString.replace(/^\?*/, '?')
 
   // If query string is too long, upgrade GET method to POST
-  if (this.method === 'GET' && (location.host + urlWithQuery).length > 1000) {
-    this.method = 'POST'
+  if (query.method === 'GET' && (location.host + urlWithQuery).length > 1000) {
+    query.method = 'POST'
   }
 
   // This makes the uWSGI server send back json errors
@@ -103,19 +102,19 @@ Query.prototype.fetch = async function () {
 
   // Settings object to send with 'fetch' method
   let initObject = {
-    method: this.method,
+    method: query.method,
     headers: headers,
     credentials: 'same-origin'
   }
 
   // Don't add data on GET requests
-  if (this.method !== 'GET') {
-    initObject.body = JSON.stringify(this.data)
+  if (query.method !== 'GET') {
+    initObject.body = JSON.stringify(query.data)
   }
 
   let json
   try {
-    const response = await fetch(this.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
+    const response = await fetch(query.method === 'GET' ? urlWithQuery : urlWithoutQuery, initObject)
 
     // Read json stream
     json = response.json()
@@ -126,7 +125,7 @@ Query.prototype.fetch = async function () {
     }
   } catch (error) {
     // Log error in collapsed group
-    console.groupCollapsed(this.method, error.statusCode, error.title)
+    console.groupCollapsed(query.method, error.statusCode, error.title)
     if ('message' in error) {
       console.error(error.message)
     }
@@ -138,20 +137,20 @@ Query.prototype.fetch = async function () {
 }
 
 /* Server-side */
-Query.prototype.execute = async function (connection) {
+export async function toExecute (query, connection) {
   let result
   let client
   try {
     client = await connection
-    console.log('trying connection', this.config.version, this.method, this.metaId, JSON.stringify(this.args), JSON.stringify(this.data))
+    console.log('trying connection', query.config.version, query.method, query.metaId, JSON.stringify(query.args), JSON.stringify(query.data))
     result = await client.query(
       'select status, message, response, mimetype ' +
       'from endpoint.request($1, $2, $3, $4::json, $5::json)', [
-        this.config.version,
-        this.method,
-        this.metaId,
-        JSON.stringify(this.args),
-        JSON.stringify(this.data)
+        query.config.version,
+        query.method,
+        query.metaId,
+        JSON.stringify(query.args),
+        JSON.stringify(query.data)
       ])
 
     // release client

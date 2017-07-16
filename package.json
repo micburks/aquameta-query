@@ -1,6 +1,6 @@
 {
   "name": "aquameta-query",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Query abstraction for communication between Aquameta client & server",
   "main": "dist/query.js",
   "module": "dist/query.es.js",
