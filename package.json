@@ -8,6 +8,8 @@
   "scripts": {
     "build": "rollup -c",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "prepublish": "npm run test",
+    "postversion": "git push && git push --tags",
     "test": "nyc mocha",
     "watch": "rollup -c -w"
   },
