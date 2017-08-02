@@ -18,6 +18,21 @@ export function fromRequest (req) {
   return query
 }
 
+function asArray (arg) {
+  return !arg.length ? [arg] : arg
+}
+
+function concatMap (arr) {
+  return arr.reduce((acc, item) => {
+    if (item instanceof Array) {
+      acc.concat(item)
+    } else {
+      acc.push(item)
+    }
+    return acc
+  }, [])
+}
+
 /* Set query based on programmatic api */
 export function fromDatum (method, metaId, args, data) {
   const query = {}
@@ -30,51 +45,88 @@ export function fromDatum (method, metaId, args, data) {
   query.args.metaData = query.args.hasOwnProperty('metaData') ? query.args.metaData : true
 
   // Map the keys of the args object to an array of encoded url components
-  query.queryString = Object.keys(query.args).sort().map(keyName => {
-    let key = query.args[keyName]
+  const mappedArgs = Object
+    .keys(query.args)
+    .sort()
+    .map(argName => {
+      let arg = query.args[argName]
+      let key = argName
+      let value = null
 
-    switch (keyName) {
-      case 'where':
-        // where: { name: 'column_name', op: '=', value: 'value' }
-        // where: [{ name: 'column_name', op: '=', value: 'value' }]
-        key = !key.length ? [key] : key
-        return key.map(w => `where=${encodeURIComponent(JSON.stringify(w))}`).join('&')
-      case 'order_by':
-        // So many possibilities...
-        // order_by: '-?column_name'
-        // order_by: ['-?column_name']
-        // order_by: { 'column_name': 'asc|desc' }
-        // order_by: [{ 'column_name': 'asc|desc' }]
-        // order_by: { column: 'column_name', direction: 'asc|desc' }
-        // order_by: [{ column: 'column_name', direction: 'asc|desc' }]
-        key = !key.length ? [key] : key
+      switch (argName) {
+        case 'where':
+          // where: { name: 'column_name', op: '=', value: 'value' }
+          // where: [{ name: 'column_name', op: '=', value: 'value' }]
+          arg = asArray(args)
+          key = null
+          value = arg
+            .map(w => {
+              let value = encodeURIComponent(JSON.stringify(w))
+              return `where=${value}`
+            })
+            .join('&')
+          break
 
-        return `${keyName}=${
-                    encodeURIComponent(
-                      key.map((o, i) => (o.direction !== 'asc' ? '-' : '') + o.column)
-                      .join(',')
-                    )
-                }`
-      case 'limit':
-        // limit: number
-      case 'offset': // eslint-disable-line no-fallthrough
-        // offset: number
-        let parsedNum = parseInt(key)
-        if (!isNaN(parsedNum)) {
-          return `${keyName}=${parsedNum}`
-        }
-        return
-      case 'evented':
-        return 'session_id=' + encodeURIComponent(JSON.stringify(key))
-      case 'metaData':
-      case 'args':
-      case 'exclude':
-      case 'include':
-        return `${keyName}=${encodeURIComponent(JSON.stringify(key))}`
-    }
-  })
+        case 'order_by':
+          // order_by: '-?column_name'
+          // order_by: ['-?column_name']
+          // order_by: { 'column_name': 'asc|desc' }
+          // order_by: [{ 'column_name': 'asc|desc' }]
+          // order_by: { column: 'column_name', direction: 'asc|desc' }
+          // order_by: [{ column: 'column_name', direction: 'asc|desc' }]
+          arg = asArray(args)
+          const columnList = concatMap(arg, col => {
+            if (typeof col === 'string') {
+              return col
+            } else {
+              if ('column' in col && 'direction' in col) {
+                let { column, direction } = col
+                return direction !== 'asc' ? `-${column}` : `${column}`
+              } else {
+                return Object
+                  .keys(col)
+                  .map(columnName => {
+                    return col[columnName] !== 'asc' ? `-${columnName}` : `${columnName}`
+                  })
+              }
+            }
+          })
+          value = encodeURIComponent(columnList.join(','))
+          break
+
+        case 'limit':
+          // limit: number
+        case 'offset': // eslint-disable-line no-fallthrough
+          // offset: number
+          let parsedNum = parseInt(arg)
+          if (!isNaN(parsedNum)) {
+            value = parsedNum
+            break
+          }
+          key = value = null
+          break
+
+        case 'evented':
+          key = 'session_id'
+          value = encodeURIComponent(JSON.stringify(arg))
+          break
+
+        case 'metaData':
+        case 'args':
+        case 'exclude':
+        case 'include':
+          value = encodeURIComponent(JSON.stringify(arg))
+          break
+
+        default:
+          key = value = null
+      }
+      return { key, value }
+    })
+
+  query.queryString = mappedArgs
+    .map(({key, value}) => key ? `${key}=${value}` : value)
     .join('&')
-  // .replace(/^/, '?')
     .replace(/&&/g, '&')
 
   console.log('fromDatum queryString', query.queryString)
