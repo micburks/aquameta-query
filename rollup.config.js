@@ -1,6 +1,11 @@
+import { readFileSync } from 'fs'
 import babel from 'rollup-plugin-babel'
 import eslint from 'rollup-plugin-eslint'
-const pkg = require('./package.json')
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
+
+const banner = readFileSync('./banner.js', 'utf-8')
+  .replace('${version}', pkg.version)
 
 export default {
   entry: 'src/index.js',
@@ -15,5 +20,6 @@ export default {
   plugins: [
     eslint(),
     babel()
-  ]
+  ],
+  banner
 }
