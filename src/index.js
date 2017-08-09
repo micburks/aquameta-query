@@ -1,7 +1,24 @@
 /* global location fetch Headers */
 import 'isomorphic-fetch'
 
-/* Set query based on datum request */
+/**
+ * Set query based on source url
+ * @returns {Query}
+ */
+export function fromSourceUrl (url) {
+  const query = {}
+  query.method = 'GET'
+  query.metaId = `/${}/${}/${req.url.split('?')[0]}`
+  query.args = req.query
+  query.data = {}
+  console.log('fromSourceUrl', query)
+  return query
+}
+
+/**
+ * Set query based on datum request
+ * @returns {Query}
+ */
 export function fromRequest (req) {
   const query = {}
   query.method = req.method
@@ -33,7 +50,10 @@ function concatMap (arr) {
   }, [])
 }
 
-/* Set query based on programmatic api */
+/**
+ * Set query based on programmatic api
+ * @returns {Query}
+ */
 export function fromDatum (method, metaId, args, data) {
   const query = {}
   query.method = method
@@ -133,7 +153,10 @@ export function fromDatum (method, metaId, args, data) {
   return query
 }
 
-/* Client-side */
+/**
+ * Fetch query results client-side
+ * @returns {Promise}
+ */
 export function toFetch (query) {
   let baseUrl = `/${query.config.url}/${query.config.version}`.replace(/\/+/g, '/')
   console.log('base url for fetch', baseUrl)
@@ -183,7 +206,10 @@ export function toFetch (query) {
     })
 }
 
-/* Server-side */
+/**
+ * Execute query server-side
+ * @returns {Promise}
+ */
 export function toExecute (query, connection) {
   connection.then(client => {
     console.log('trying connection', query.config.version, query.method, query.metaId, JSON.stringify(query.args), JSON.stringify(query.data))

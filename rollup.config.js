@@ -9,7 +9,6 @@ const banner = readFileSync('./banner.js', 'utf-8')
 
 export default {
   entry: 'src/index.js',
-  format: 'cjs',
   targets: [
     { dest: pkg.main, format: 'cjs' },
     { dest: pkg.module, format: 'es' }
