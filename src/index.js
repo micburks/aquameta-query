@@ -8,7 +8,7 @@ import 'isomorphic-fetch'
 export function fromSourceUrl (url) {
   const query = {}
   query.method = 'GET'
-  query.metaId = `/${}/${}/${req.url.split('?')[0]}`
+  query.metaId = `/${'endpoint'}/${'v0.1'}/${url.replace(/\/db\//, '')}`
   query.args = req.query
   query.data = {}
   console.log('fromSourceUrl', query)
