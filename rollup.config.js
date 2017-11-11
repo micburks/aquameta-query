@@ -8,7 +8,7 @@ const banner = readFileSync('./banner.js', 'utf-8')
   .replace('${version}', pkg.version)
 
 export default {
-  entry: 'src/index.js',
+  entry: 'index.js',
   targets: [
     { dest: pkg.main, format: 'cjs' },
     { dest: pkg.module, format: 'es' }
