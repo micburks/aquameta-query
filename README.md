@@ -5,3 +5,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/micburks/aquameta-query/badge.svg?branch=master)](https://coveralls.io/github/micburks/aquameta-query?branch=master)
 
 Query abstraction for communication between Aquameta client & server
+
+
+## --- DEPRECATION NOTICE ---
+
+This package has been combined with [aquameta-datum](https://www.npmjs.com/package/aquameta-datum)
